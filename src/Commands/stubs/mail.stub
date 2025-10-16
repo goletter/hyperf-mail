@@ -1,0 +1,33 @@
+<?php
+declare(strict_types=1);
+
+/**
+ * This file is part of goletter/mail.
+ *
+ * @link     https://github.com/goletter/hyperf-mail
+ * @contact  goletter@outlook.com
+ * @license  https://github.com/goletter/hyperf-mail/blob/master/LICENSE
+ */
+namespace %NAMESPACE%;
+
+use Goletter\Contract\ShouldQueue;
+use Goletter\Mail\Mailable;
+
+class %CLASS% extends Mailable implements ShouldQueue
+{
+    /**
+     * Create a new message instance.
+     */
+    public function __construct()
+    {
+        //
+    }
+
+    /**
+     * Build the message.
+     */
+    public function build(): void
+    {
+        $this->htmlView('view.name');
+    }
+}

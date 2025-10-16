@@ -1,0 +1,77 @@
+{
+    "name": "goletter/mail",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "php",
+        "hyperf",
+        "mail"
+    ],
+    "description": "The Hyperf Mail package.",
+    "authors": [
+        {
+            "name": "goletter",
+            "email": "goletter@outlook.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Goletter\\Mail\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Goletter\\Mail\\": "tests"
+        }
+    },
+    "require": {
+        "php": ">=8.0",
+        "ext-json": "*",
+        "ext-swoole": ">=4.5",
+        "hyperf-ext/contract": "~2.2.0",
+        "hyperf/async-queue": "^3.1",
+        "hyperf/command": "^3.1",
+        "hyperf/config": "^3.1",
+        "hyperf/devtool": "^3.1",
+        "hyperf/di": "^3.1",
+        "hyperf/event": "^3.1",
+        "hyperf/filesystem": "^3.1",
+        "hyperf/framework": "^3.1",
+        "hyperf/translation": "^3.1",
+        "hyperf/view": "^3.1",
+        "pudongping/hyperf-wise-locksmith": "^3.0",
+        "symfony/mailer": "^6.0.5"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.0",
+        "hyperf/testing": "^3.1",
+        "phpstan/phpstan": "^0.12",
+        "swoole/ide-helper": "dev-master",
+        "mockery/mockery": "^1.0"
+    },
+    "suggest": {
+        "hyperf/guzzle": "Required to use the mail driver (^2.0).",
+        "symfony/amazon-mailer": "Required to use the AWS SES mail driver.",
+        "symfony/google-mailer": "Required to use the Gmail mail driver.",
+        "symfony/mailchimp-mailer": "Required to use the Mailchimp mail driver.",
+        "symfony/mailgun-mailer": "Required to use the Mailgun mail driver.",
+        "symfony/mailjet-mailer": "Required to use the Mailjet mail driver.",
+        "symfony/postmark-mailer": "Required to use the Postmark mail driver.",
+        "symfony/sendgrid-mailer": "Required to use the SendGrid mail driver.",
+        "symfony/sendinblue-mailer": "Required to use the Sendinblue mail driver.",
+        "symfony/oh-my-smtp-mailer": "Required to use the OhMySMTP mail driver."
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "scripts": {
+        "test": "co-phpunit --prepend tests/bootstrap.php -c phpunit.xml --colors=always",
+        "analyse": "phpstan analyse --memory-limit 1024M -l 0 ./src",
+        "cs-fix": "php-cs-fixer fix $1"
+    },
+    "extra": {
+        "hyperf": {
+            "config": "Goletter\\Mail\\ConfigProvider"
+        }
+    }
+}
