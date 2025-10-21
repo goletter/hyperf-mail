@@ -8,6 +8,8 @@ declare(strict_types=1);
  * @contact  goletter@outlook.com
  * @license  https://github.com/goletter/hyperf-mail/blob/master/LICENSE
  */
+use function Hyperf\Support\env;
+
 return [
     /*
     |--------------------------------------------------------------------------
