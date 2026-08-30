@@ -41,7 +41,26 @@ return [
 
     'mailers' => [
         'smtp' => [
-            // smtp://user:pass@smtp.example.com:port
+            /*
+            | 推荐：在 .env 中使用离散配置
+            |
+            | MAIL_MAILER=smtp
+            | MAIL_SMTP_HOST=smtp.hostinger.com
+            | MAIL_SMTP_PORT=587
+            | MAIL_SMTP_ENCRYPTION=tls   # tls=587 STARTTLS，ssl=465 隐式 TLS
+            | MAIL_SMTP_USERNAME=you@example.com
+            | MAIL_SMTP_PASSWORD=secret
+            | MAIL_FROM_ADDRESS=you@example.com
+            | MAIL_FROM_NAME="Example"
+            |
+            | 可选：设置 MAIL_SMTP_DSN 后将优先生效，例如
+            | MAIL_SMTP_DSN=smtp://user:pass@smtp.example.com:587
+            */
+            'host' => env('MAIL_SMTP_HOST'),
+            'port' => (int) env('MAIL_SMTP_PORT', 587),
+            'encryption' => env('MAIL_SMTP_ENCRYPTION', 'tls'), // tls | ssl | null
+            'username' => env('MAIL_SMTP_USERNAME'),
+            'password' => env('MAIL_SMTP_PASSWORD'),
             'dsn' => env('MAIL_SMTP_DSN'),
         ],
 

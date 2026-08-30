@@ -108,8 +108,13 @@ class MailManager implements MailManagerInterface
             return new $transportClass($options); // ✅ 构造函数传入 options
         }
 
-        if (empty($config['dsn'])) {
-            throw new InvalidArgumentException('The mail transport DSN must be specified.');
+        $dsn = $config['dsn'] ?? null;
+        if (empty($dsn) && ! empty($config['host'])) {
+            $dsn = $this->buildSmtpDsn($config);
+        }
+
+        if (empty($dsn)) {
+            throw new InvalidArgumentException('The mail transport DSN or SMTP host must be specified.');
         }
 
         $logger = null;
@@ -120,7 +125,34 @@ class MailManager implements MailManagerInterface
             );
         }
 
-        return Transport::fromDsn($config['dsn'], null, null, $logger);
+        return Transport::fromDsn($dsn, null, null, $logger);
+    }
+
+    /**
+     * Build a Symfony Mailer SMTP DSN from discrete configuration.
+     *
+     * Supports: host, port, encryption (tls|ssl|null), username, password.
+     */
+    protected function buildSmtpDsn(array $config): string
+    {
+        $encryption = $config['encryption'] ?? null;
+        $scheme = $encryption === 'ssl' ? 'smtps' : 'smtp';
+        $host = $config['host'];
+        $port = (int) ($config['port'] ?? ($scheme === 'smtps' ? 465 : 587));
+
+        $userInfo = '';
+        $username = $config['username'] ?? null;
+        if ($username !== null && $username !== '') {
+            $userInfo = rawurlencode((string) $username);
+            if (array_key_exists('password', $config) && $config['password'] !== null) {
+                $userInfo .= ':' . rawurlencode((string) $config['password']);
+            }
+            $userInfo .= '@';
+        }
+
+        // smtp:// → STARTTLS when supported (e.g. port 587 + encryption=tls)
+        // smtps:// → implicit TLS (e.g. port 465 + encryption=ssl)
+        return sprintf('%s://%s%s:%d', $scheme, $userInfo, $host, $port);
     }
 
     /**

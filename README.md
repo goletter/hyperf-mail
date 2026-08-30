@@ -3,6 +3,12 @@
 - [简介](#introduction)
     - [安装](#installation)
     - [驱动前提](#driver-prerequisites)
+        - [SMTP 驱动](#smtp-driver)
+        - [Mailgun 驱动](#mailgun-driver)
+        - [Postmark 驱动](#postmark-driver)
+        - [AWS SES 驱动](#aws-ses-driver)
+        - [阿里云 DM 驱动](#aliyun-dm-driver)
+        - [Resend 驱动](#resend-driver)
 - [创建通知](#generating-mailables)
 - [编写通知](#writing-mailables)
     - [配置发送者](#configuring-the-sender)
@@ -29,11 +35,6 @@
 ```shell script
 composer require goletter/mail
 ```
-build(deps): 更新 Hyperf框架相关依赖版本
-
-- 将 Hyperf 相关包的版本从 ~2.2.0 升级到 ^3.1
-- 更新 php-cs-fixer 依赖到 ^3.0
-- 将 mockery/mockery依赖更新到 ^1.0
 
 #### 发布配置
 
@@ -41,7 +42,7 @@ build(deps): 更新 Hyperf框架相关依赖版本
 php bin/hyperf.php vendor:publish goletter/mail
 ```
 
-发布的配置文件中配置的每个邮件程序都可能有自己的「传输方式」和配置选项，这将允许你的应用程序使用不同的邮件服务来发送特定的邮件。例如，你的应用程序可能使用 Postmark 发送事务性邮件，而使用 AWS SES 发送批量邮件。
+发布的配置文件中配置的每个邮件程序都可能有自己的「传输方式」和配置选项，这将允许你的应用程序使用不同的邮件服务来发送特定的邮件。例如，你的应用程序可能使用 Postmark 发送事务性邮件，而使用 AWS SES 发送批量邮件。默认驱动为 SMTP，可直接在 `.env` 中配置，详见下方 [SMTP 驱动](#smtp-driver)。
 
 <a name="driver-prerequisites"></a>
 ### 驱动前提
@@ -52,6 +53,74 @@ php bin/hyperf.php vendor:publish goletter/mail
 composer require hyperf/guzzle
 ```
 
+<a name="smtp-driver"></a>
+#### SMTP 驱动
+
+SMTP 是默认驱动，无需额外 Composer 依赖。发布配置后，在项目 `.env` 中填写 SMTP 信息即可。
+
+**1. 选择驱动并配置发件人**
+
+```env
+MAIL_MAILER=smtp
+
+MAIL_FROM_ADDRESS=noreply@example.com
+MAIL_FROM_NAME="Example"
+```
+
+**2. 使用离散配置（推荐）**
+
+适合大多数邮箱服务商（Hostinger、Gmail、QQ 邮箱、企业邮等）：
+
+```env
+MAIL_SMTP_HOST=smtp.hostinger.com
+MAIL_SMTP_PORT=587
+MAIL_SMTP_ENCRYPTION=tls
+MAIL_SMTP_USERNAME=you@example.com
+MAIL_SMTP_PASSWORD=your-password
+```
+
+对应 `config/autoload/mail.php` 中的 `smtp` 配置：
+
+```php
+'smtp' => [
+    'host' => env('MAIL_SMTP_HOST'),
+    'port' => (int) env('MAIL_SMTP_PORT', 587),
+    'encryption' => env('MAIL_SMTP_ENCRYPTION', 'tls'), // tls | ssl | null
+    'username' => env('MAIL_SMTP_USERNAME'),
+    'password' => env('MAIL_SMTP_PASSWORD'),
+    'dsn' => env('MAIL_SMTP_DSN'), // 可选，见下文
+],
+```
+
+**加密方式说明**
+
+| `MAIL_SMTP_ENCRYPTION` | 含义 | 常用端口 |
+| --- | --- | --- |
+| `tls` | STARTTLS（推荐） | `587` |
+| `ssl` | 隐式 SSL/TLS | `465` |
+| 留空 / `null` | 不强制加密 | `25` |
+
+**3. 使用完整 DSN（可选）**
+
+若你更习惯 Symfony Mailer DSN，可只配 `MAIL_SMTP_DSN`。**一旦设置了 DSN，将优先生效**，忽略上面的 host/port 等离散项：
+
+```env
+# tls / 587
+MAIL_SMTP_DSN=smtp://you%40example.com:password@smtp.hostinger.com:587
+
+# ssl / 465
+MAIL_SMTP_DSN=smtps://you%40example.com:password@smtp.hostinger.com:465
+```
+
+> 用户名、密码中若含 `@`、`:`、`/` 等特殊字符，请先做 URL 编码（例如 `@` → `%40`）。
+
+**常见问题**
+
+- 改完 `.env` 后请重启 Hyperf 进程，配置才会生效。
+- 若项目里已发布过旧版 `mail.php`，请把上面的 `smtp` 字段补全，或重新执行 `vendor:publish`。
+- `MAIL_SMTP_USERNAME` 一般是完整邮箱地址，以服务商文档为准。
+
+<a name="mailgun-driver"></a>
 #### Mailgun 驱动
 
 要使用 Mailgun 驱动，首先必须安装 Hyperf Guzzle 组件, 之后将 `config/autoload/mail.php` 配置文件中的 `default` 选项设置为 `mailgun`。接下来，确认配置文件包含以下选项：
@@ -73,6 +142,7 @@ composer require hyperf/guzzle
 ];
 ```
 
+<a name="postmark-driver"></a>
 #### Postmark 驱动
 
 要使用 Postmark 驱动， 需要先通过 Composer 安装 Postmark 的 SwiftMailer 函数库：
@@ -96,6 +166,7 @@ composer require wildbit/swiftmailer-postmark
 ];
 ```
 
+<a name="aws-ses-driver"></a>
 #### AWS SES 驱动
 
 要使用 AWS SES 驱动，你必须先安装 Amazon AWS SDK。你可以在 `composer.json` 文件的 `require` 段落加入下面这一行并运行 `composer update` 命令：
@@ -152,6 +223,7 @@ composer require wildbit/swiftmailer-postmark
 ];
 ```
 
+<a name="aliyun-dm-driver"></a>
 #### 阿里云 DM 驱动
 
 要使用阿里云 DM 驱动，你必须先安装 `alibabacloud/dm`。你可以在 `composer.json` 文件的 `require` 段落加入下面这一行并运行 `composer update` 命令：
@@ -180,6 +252,7 @@ composer require wildbit/swiftmailer-postmark
 
 > 注意，阿里云 DM 驱动仅支持事务类邮件，不支持批量邮件。
 
+<a name="resend-driver"></a>
 #### Resend 驱动
 
 要使用Resend 驱动，你必须先安装 `resend/resend-php`。你可以在 `composer.json` 文件的 `require` 段落加入下面这一行并运行 `composer update` 命令：
