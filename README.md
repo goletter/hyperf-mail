@@ -4,6 +4,7 @@
     - [安装](#installation)
     - [驱动前提](#driver-prerequisites)
         - [SMTP 驱动](#smtp-driver)
+        - [Gmail 驱动](#gmail-driver)
         - [Mailgun 驱动](#mailgun-driver)
         - [Postmark 驱动](#postmark-driver)
         - [AWS SES 驱动](#aws-ses-driver)
@@ -27,7 +28,7 @@
 <a name="introduction"></a>
 ## 简介
 
-该组件衍生自 [illuminate/mail](https://github.com/illuminate/mail )，基于 [SwiftMailer](https://swiftmailer.symfony.com/) 函数库提供了一套干净、简洁的 API ，可以为 SMTP、Mailgun、Postmark、AWS SES、阿里云 DM 和 `sendmail` 提供驱动，让你可以快速从本地或云端服务自由地发送邮件。
+该组件衍生自 [illuminate/mail](https://github.com/illuminate/mail )，基于 [Symfony Mailer](https://symfony.com/doc/current/mailer.html) 提供了一套干净、简洁的 API ，可以为 SMTP、Gmail、Mailgun、Postmark、AWS SES、阿里云 DM、Resend 和 `sendmail` 提供驱动，让你可以快速从本地或云端服务自由地发送邮件。
 
 <a name="installation"></a>
 ### 安装
@@ -119,6 +120,42 @@ MAIL_SMTP_DSN=smtps://you%40example.com:password@smtp.hostinger.com:465
 - 改完 `.env` 后请重启 Hyperf 进程，配置才会生效。
 - 若项目里已发布过旧版 `mail.php`，请把上面的 `smtp` 字段补全，或重新执行 `vendor:publish`。
 - `MAIL_SMTP_USERNAME` 一般是完整邮箱地址，以服务商文档为准。
+
+<a name="gmail-driver"></a>
+#### Gmail 驱动
+
+要使用 Gmail 驱动，需先通过 Composer 安装 Symfony Google Mailer：
+
+```shell script
+composer require symfony/google-mailer
+```
+
+然后在 `.env` 中配置：
+
+```env
+MAIL_MAILER=gmail
+MAIL_GMAIL_DSN=gmail+smtp://you%40gmail.com:your-app-password@default
+
+MAIL_FROM_ADDRESS=you@gmail.com
+MAIL_FROM_NAME="Example"
+```
+
+对应 `config/autoload/mail.php` 中的 `gmail` 配置：
+
+```php
+'gmail' => [
+    // gmail+smtp://USERNAME:APP-PASSWORD@default
+    'dsn' => env('MAIL_GMAIL_DSN'),
+],
+```
+
+**使用前提**
+
+- Google 账号需开启[两步验证](https://myaccount.google.com/security)
+- 在[应用专用密码](https://myaccount.google.com/apppasswords)中生成 App Password，填入 DSN 的密码部分
+- 用户名、密码中的 `@`、`:`、`/` 等特殊字符请先做 URL 编码（例如 `@` → `%40`）
+
+> Symfony 官方建议 Gmail 驱动仅用于开发/测试；生产环境请使用专业邮件服务（如 SES、Mailgun、Postmark、阿里云 DM 等）。若改完 `.env`，请重启 Hyperf 进程使配置生效。
 
 <a name="mailgun-driver"></a>
 #### Mailgun 驱动

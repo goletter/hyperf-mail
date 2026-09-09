@@ -91,6 +91,21 @@ return [
             'dsn' => env('MAIL_POSTMARK_DSN'),
         ],
 
+        'gmail' => [
+            /*
+            | 需先安装：composer require symfony/google-mailer
+            |
+            | MAIL_MAILER=gmail
+            | MAIL_GMAIL_DSN=gmail+smtp://USERNAME:APP-PASSWORD@default
+            |
+            | 说明：
+            | - 账号需开启两步验证，并使用「应用专用密码」（App Password）
+            | - 用户名、密码中的 @ 等特殊字符请 URL 编码（@ → %40）
+            | - Symfony 官方建议仅用于开发/测试，生产环境请使用专业邮件服务
+            */
+            'dsn' => env('MAIL_GMAIL_DSN'),
+        ],
+
         'sendmail' => [
             'dsn' => 'sendmail://default',
         ],
