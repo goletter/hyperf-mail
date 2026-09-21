@@ -10,7 +10,7 @@ declare(strict_types=1);
  */
 namespace %NAMESPACE%;
 
-use Goletter\Contract\ShouldQueue;
+use HyperfExt\Contract\ShouldQueue;
 use Goletter\Mail\Mailable;
 
 class %CLASS% extends Mailable implements ShouldQueue
