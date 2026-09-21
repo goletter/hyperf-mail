@@ -15,5 +15,10 @@ interface MailManagerInterface
     /**
      * Get a mailer instance by name.
      */
+    public function mailer(?string $name = null): MailerInterface;
+
+    /**
+     * Get a mailer instance by name.
+     */
     public function get(string $name): MailerInterface;
 }

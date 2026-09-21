@@ -260,7 +260,47 @@ MAIL_RESEND_ACCESS_KEY_ID=
 php bin/hyperf.php gen:mail OrderShipped
 ```
 
-类默认生成在 `app/Mail`。在 `build()` 中配置发件人、主题、模板与附件。
+类默认生成在 `app/Mail`。在 `build()` 中配置主题、正文、发件人与附件。
+
+### 完整示例
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace App\Mail;
+
+use Goletter\Mail\Mailable;
+
+class OrderShipped extends Mailable
+{
+    public function __construct(
+        public string $userName,
+    ) {
+    }
+
+    public function build(): void
+    {
+        $this->subject('订单已发货')
+            // HTML 与纯文本可同时设置，会组成 multipart 邮件
+            ->htmlBody(sprintf(
+                '<h1>Hello, %s</h1><p>您的订单已发货。</p>',
+                htmlspecialchars($this->userName, ENT_QUOTES, 'UTF-8')
+            ))
+            ->textBody(sprintf('Hello, %s — 您的订单已发货。', $this->userName));
+    }
+}
+```
+
+发送：
+
+```php
+use App\Mail\OrderShipped;
+use Goletter\Mail\Mail;
+
+Mail::to('user@example.com')->send(new OrderShipped('Yong'));
+```
 
 ### 发件人
 
@@ -274,23 +314,32 @@ public function build(): void
 
 未调用 `from()` 时使用 `mail.from` 全局配置。
 
-### 模板内容
+### 正文内容
+
+可用 **视图模板** 或 **直接写字符串**。HTML 与纯文本可只设其一，也可同时设置（推荐同时设置，兼容不支持 HTML 的客户端）。
+
+**直接写正文**
+
+```php
+public function build(): void
+{
+    $this->subject('通知')
+        ->htmlBody('<p>Hello</p>')
+        ->textBody('Hello'); // 可选；与 htmlBody 并存时为 multipart，不是附件
+}
+```
+
+**视图模板**
 
 依赖 [`hyperf/view`](https://hyperf.wiki/3.1/#/zh-cn/view)（本包已引入）。以 Blade 为例：
 
 ```php
-public function build()
+public function build(): void
 {
-    return $this
+    $this->subject('订单已发货')
         ->htmlView('emails.orders.shipped')
         ->textView('emails.orders.shipped_plain'); // 可选
 }
-```
-
-也可直接写正文：
-
-```php
-$this->htmlBody('<p>Hello</p>')->textBody('Hello');
 ```
 
 **视图数据**
@@ -301,9 +350,9 @@ $this->htmlBody('<p>Hello</p>')->textBody('Hello');
 ```php
 public function __construct(public Order $order) {}
 
-public function build()
+public function build(): void
 {
-    return $this->htmlView('emails.orders.shipped')
+    $this->htmlView('emails.orders.shipped')
         ->with([
             'orderName' => $this->order->name,
             'orderPrice' => $this->order->price,
@@ -313,6 +362,23 @@ public function build()
 
 ```blade
 <div>Price: {{ $order->price }}</div>
+```
+
+### 指定 Mailer
+
+未指定时使用 `mail.default`（即 `MAIL_MAILER`）。可用两种方式覆盖：
+
+```php
+// 发送时指定
+Mail::mailer('postmark')->to($user)->send(new OrderShipped($order));
+
+// 或在 Mailable 内指定
+public function build(): void
+{
+    $this->mailer('smtp')
+        ->subject('订单已发货')
+        ->htmlView('emails.orders.shipped');
+}
 ```
 
 ### 附件
@@ -341,7 +407,7 @@ $this->htmlView('emails.orders.shipped')
 ### 自定义 Symfony Email
 
 ```php
-public function build()
+public function build(): void
 {
     $this->htmlView('emails.orders.shipped');
 
@@ -365,7 +431,7 @@ Mail::to($user)
     ->bcc($evenMoreUsers)
     ->send(new OrderShipped($order));
 
-// 指定 mailer
+// 指定 mailer（见上方「指定 Mailer」）
 Mail::mailer('postmark')
     ->to($user)
     ->send(new OrderShipped($order));
@@ -452,3 +518,5 @@ Mail::to($user)->locale('es')->send(new OrderShipped($order));
 - 若曾发布过旧版 `mail.php`，请对照 `publish/mail.php` 补全字段，或重新 `vendor:publish`
 - SMTP 用户名一般是完整邮箱，以服务商文档为准
 - 包名与发布命令均为 `goletter/hyperf-mail`（不是 `goletter/mail`）
+- `htmlBody()` + `textBody()`（或 `htmlView` + `textView`）会组成 multipart 邮件；纯文本不是附件，附件请用 `attach` / `attachData`
+- 未调用 `mailer()` / `Mail::mailer()` 时使用 `MAIL_MAILER` 默认驱动，无需也不应提前访问 `$mailer` 属性

@@ -37,12 +37,12 @@ abstract class Mailable implements MailableInterface, CompressInterface, UnCompr
     /**
      * The locale of the message.
      */
-    public string $locale;
+    public ?string $locale = null;
 
     /**
      * The person the message is from.
      */
-    public array $from;
+    public array $from = [];
 
     /**
      * The "to" recipients of the message.
@@ -62,22 +62,22 @@ abstract class Mailable implements MailableInterface, CompressInterface, UnCompr
     /**
      * The "reply to" recipients of the message.
      */
-    public array $replyTo;
+    public array $replyTo = [];
 
     /**
      * The subject of the message.
      */
-    public string $subject;
+    public ?string $subject = null;
 
     /**
      * The HTML view to use for the message.
      */
-    public string $htmlViewTemplate;
+    public ?string $htmlViewTemplate = null;
 
     /**
      * The plain text view to use for the message.
      */
-    public string $textViewTemplate;
+    public ?string $textViewTemplate = null;
 
     /**
      * The view data for the message.
@@ -87,12 +87,12 @@ abstract class Mailable implements MailableInterface, CompressInterface, UnCompr
     /**
      * The HTML content to use for the message.
      */
-    public string $htmlBody;
+    public ?string $htmlBody = null;
 
     /**
      * The plain text content to use for the message.
      */
-    public string $textBody;
+    public ?string $textBody = null;
 
     /**
      * The attachments for the message.
@@ -117,7 +117,7 @@ abstract class Mailable implements MailableInterface, CompressInterface, UnCompr
     /**
      * The name of the mailer that should send the message.
      */
-    public string $mailer;
+    public ?string $mailer = null;
 
     /**
      * The callbacks for the message.
@@ -407,9 +407,13 @@ abstract class Mailable implements MailableInterface, CompressInterface, UnCompr
 
     protected function resolveMailer(null|MailerInterface|MailManagerInterface $mailer = null): MailerInterface
     {
-        return empty($mailer)
-            ? ApplicationContext::getContainer()->get(MailManagerInterface::class)->mailer($this->mailer)
-            : ($mailer instanceof MailManager ? $mailer->mailer($this->mailer) : $mailer);
+        if (empty($mailer)) {
+            return ApplicationContext::getContainer()->get(MailManagerInterface::class)->mailer($this->mailer);
+        }
+
+        return $mailer instanceof MailManagerInterface
+            ? $mailer->mailer($this->mailer)
+            : $mailer;
     }
 
     /**
@@ -534,7 +538,7 @@ abstract class Mailable implements MailableInterface, CompressInterface, UnCompr
     protected function buildAddresses(Message $message): self
     {
         foreach (['from', 'replyTo'] as $type) {
-            isset($this->{$type})
+            ! empty($this->{$type})
             && is_array($this->{$type})
             && $message->{'set' . ucfirst($type)}($this->{$type}['address'], $this->{$type}['name']);
         }
@@ -608,11 +612,7 @@ abstract class Mailable implements MailableInterface, CompressInterface, UnCompr
         }
 
         if (! empty($plain)) {
-            if (empty($html)) {
-                $message->text($plain);
-            } else {
-                $message->attach($plain, null, $plain);
-            }
+            $message->text($plain);
         }
 
         $message->setData($data);
